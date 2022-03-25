@@ -77,7 +77,7 @@ def get_price_averages(gas_stations: list[GasStation]):
         if data["count"]:
             data["price_average"] = round(data["price_average"] / data["count"], 2)
 
-    price_averages["id"] = gas_stations[0].gas_station_id,
-    price_averages["company_name"] = gas_stations[0].company_name,
+    price_averages["id"] = gas_stations[0].gas_station_id
+    price_averages["company_name"] = gas_stations[0].company_name
 
     return price_averages
