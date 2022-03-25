@@ -50,3 +50,34 @@ def save_gas_stations(gas_stations):
             created_gas_stations += 1
 
     return created_gas_stations, updated_gas_stations
+
+def get_price_averages(gas_stations: list[GasStation]):
+    price_averages = {
+        "regular_gasoline": {
+            "price_average": 0,
+            "count": 0
+        },
+        "premium_gasoline": {
+            "price_average": 0,
+            "count": 0
+        },
+        "diesel": {
+            "price_average": 0,
+            "count": 0
+        },
+    }
+    for gas_station in gas_stations:
+        for fuel_type, data in price_averages.items():
+            price = getattr(gas_station, f"{fuel_type}_price")
+            if price:
+                data["price_average"] = data["price_average"] + float(price)
+                data["count"] = data["count"] + 1
+
+    for data in price_averages.values():
+        if data["count"]:
+            data["price_average"] = round(data["price_average"] / data["count"], 2)
+
+    price_averages["id"] = gas_stations[0].gas_station_id,
+    price_averages["company_name"] = gas_stations[0].company_name,
+
+    return price_averages
