@@ -1,5 +1,7 @@
 {% load static %}
 {% url "dashboard" as dashboard_url %}
+{% url "gasstation-locations" as locations_url %}
+{% url "gasstation-versus" as versus_url %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -23,6 +25,9 @@
     <!-- Custom styles for this template-->
     <link href="{% static 'dashboard/css/sb-admin-2.min.css' %}" rel="stylesheet">
 
+    <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
+      <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB1A71hs3dupXtjvBE1--zmJHu_xg4gi6o" type="text/javascript"></script>
+      {% comment %}<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB1A71hs3dupXtjvBE1--zmJHu_xg4gi6o&callback=initMap" type="text/javascript"></script>{% endcomment %}
 </head>
 
 <body id="page-top">
@@ -50,13 +55,13 @@
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>GasMex</span></a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="">
+            <li class="nav-item {% if request.path == locations_url %}active{% endif %}">
+                <a class="nav-link" href="{{ locations_url }}">
                     <i class="fas fa-map"></i>
                     <span>Mapa</span></a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="">
+            <li class="nav-item {% if request.path == versus_url %}active{% endif %}">
+                <a class="nav-link" href="{{ versus_url }}">
                     <i class="fas fa-fire"></i>
                     <span>VS</span></a>
             </li>
@@ -118,7 +123,8 @@
     <script src="{% static 'dashboard/js/sb-admin-2.min.js' %}"></script>
 
     <!-- Page level plugins -->
-    <script src="{% static 'dashboard/vendor/chart.js/Chart.min.js' %}"></script>
+    {% comment %}<script src="{% static 'dashboard/vendor/chart.js/Chart.min.js' %}"></script>{% endcomment %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
 
     <script src="{% static 'js/fetchGasMex.js' %}"></script>
     

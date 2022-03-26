@@ -17,7 +17,7 @@ async function fetchGasMex(url, method, expectedStatusCode = 200){
 		for(let error in response){
 				errors[error] = response[error]
 		}
-		throw new Error(JSON.stringify(errors))
+		throw errors
 	}else{
 		response = await response.json();
 		return response
