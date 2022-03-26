@@ -1,0 +1,30 @@
+{% extends 'base/master.html' %}
+
+{% block title %}
+Gasolineras en Mexico 
+{% endblock title %}
+ 
+{% block content %}
+<div class="card w-50">
+  <div class="card-header">
+    Actualizar Gasolineras
+  </div>
+  <div class="card-body text-center">
+    <button class="btn btn-info" onclick="updateGasStations()">Actualizar</button>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascript %}
+<script type="text/javascript">
+  function updateGasStations(){
+    fetchGasMex("/update_gas_stations/", "POST")
+      .then(res => {
+        const gas_stations_created = res["created"]
+        const gas_stations_updated = res["updated"]
+        $.notify(`${gas_stations_created} gasolineras nuevas - ${gas_stations_updated} gasolineras actualizadas`, 'success');
+      })
+      .catch(() => $.notify('Ocurrio un error al intentar actualizar las gasolineras', 'error'))
+  }
+</script>
+{% endblock javascript %}

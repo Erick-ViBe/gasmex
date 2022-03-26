@@ -1,0 +1,144 @@
+{% extends 'base/master.html' %}
+
+{% block title %}
+Comparar gasolineras
+{% endblock title %}
+ 
+{% block content %}
+<div class="container" style="padding: 0 50px">
+	<form id="versusForm">
+		<div class="row border-between">
+			<p class="col-sm-1">
+			</p>
+			<div class="col-sm-5">
+				<input type="text" id="firstRFC" class="form-control mb-3" placeholder="Ingresa primer RFC de Gasolinera" required>
+				<div id="firstDiv"></div>
+			</div>
+			<div class="col-sm-5">
+				<input type="text" id="secondRFC" class="form-control mb-3" placeholder="Ingresa segundo RFC de Gasolinera" required>
+				<div id="secondDiv"></div>
+			</div>
+			<p class="col-sm-1">
+				<button type="submit" class="btn-circle btn-info"><i class="fas fa-search"></i></button>
+			</p>
+		</div>
+	</form>
+	<div id="gasStationsCompareChart" class="my-5">
+	</div>
+</div>
+{% endblock content %}
+{% block javascript %}
+<script type="text/javascript">
+	$("#versusForm").on("submit", function(){
+		let firstRFC = $("#firstRFC").val();
+		let secondRFC = $("#secondRFC").val();
+
+		let url = `/gas_stations/compare/${firstRFC}/${secondRFC}/`
+		$("#firstDiv").empty()
+		$("#secondDiv").empty()
+		$("#gasStationsCompareChart").empty()
+    fetchGasMex(url, "GET")
+      .then(res => {
+				let firstData = res[firstRFC]
+				let secondData = res[secondRFC]
+				$("#firstDiv").append(`
+					<ul class="list-group list-group-flush">
+						<li class="list-group-item list-group-item-primary">Informacion Basica</li>
+						<li class="list-group-item">ID: ${firstData["id"]}</li>
+						<li class="list-group-item">Razon Social: ${firstData["company_name"]}</li>
+						<li class="list-group-item list-group-item-primary">Gasolina Regular</li>
+						<li class="list-group-item">Sucursales: ${firstData["regular_gasoline"]["count"]}</li>
+						<li class="list-group-item">Precio promedio: $${firstData["regular_gasoline"]["price_average"]}</li>
+						<li class="list-group-item list-group-item-primary">Gasolina Premium</li>
+						<li class="list-group-item">Sucursales: ${firstData["premium_gasoline"]["count"]}</li>
+						<li class="list-group-item">Precio promedio: $${firstData["premium_gasoline"]["price_average"]}</li>
+						<li class="list-group-item list-group-item-primary">Diesel</li>
+						<li class="list-group-item">Sucursales: ${firstData["diesel"]["count"]}</li>
+						<li class="list-group-item">Precio promedio: $${firstData["diesel"]["price_average"]}</li>
+					</ul>
+				`)
+				$("#secondDiv").append(`
+					<ul class="list-group list-group-flush">
+						<li class="list-group-item list-group-item-success">Informacion Basica</li>
+						<li class="list-group-item">ID: ${secondData["id"]}</li>
+						<li class="list-group-item">Razon Social: ${secondData["company_name"]}</li>
+						<li class="list-group-item list-group-item-success">Gasolina Regular</li>
+						<li class="list-group-item">Sucursales: ${secondData["regular_gasoline"]["count"]}</li>
+						<li class="list-group-item">Precio promedio: $${secondData["regular_gasoline"]["price_average"]}</li>
+						<li class="list-group-item list-group-item-success">Gasolina Premium</li>
+						<li class="list-group-item">Sucursales: ${secondData["premium_gasoline"]["count"]}</li>
+						<li class="list-group-item">Precio promedio: $${secondData["premium_gasoline"]["price_average"]}</li>
+						<li class="list-group-item list-group-item-success">Diesel</li>
+						<li class="list-group-item">Sucursales: ${secondData["diesel"]["count"]}</li>
+						<li class="list-group-item">Precio promedio: $${secondData["diesel"]["price_average"]}</li>
+					</ul>
+				`)
+
+				let	first_prices = [
+					parseFloat(firstData["regular_gasoline"]["price_average"]),
+					parseFloat(firstData["premium_gasoline"]["price_average"]),
+				]
+				let first_diesel_price = parseFloat(firstData["diesel"]["price_average"])
+				if(first_diesel_price){
+					first_prices.push(first_diesel_price)
+				}
+				
+				let	second_prices = [
+					parseFloat(secondData["regular_gasoline"]["price_average"]),
+					parseFloat(secondData["premium_gasoline"]["price_average"]),
+				]
+				let second_diesel_price = parseFloat(secondData["diesel"]["price_average"])
+				if(second_diesel_price){
+					second_prices.push(second_diesel_price)
+				}
+				
+				$("#gasStationsCompareChart").append("<canvas id='chartId'></canvas>")
+				new Chart(document.getElementById("chartId"), {
+					type: 'line',
+					data: {
+						labels: ["Precio de Gasolina Regular", "Precio de Gasolina Premium", "Precio de Diesel"],
+						datasets: [
+							{
+								data: first_prices,
+								label: firstData["company_name"],
+								borderColor: "#CDD8F6",
+								fill: false
+							},
+							{
+								data: second_prices,
+								label: secondData["company_name"],
+								borderColor: "#BFF0DE",
+								fill: false
+							},
+						]
+					},
+					options: {
+						plugins: {
+							title: {
+								display: true,
+								text: 'Comparacion de precios'
+							}
+						},
+						scales: {
+							yAxes: [{
+								ticks: {
+										stepSize: 1,
+								}
+							}]
+						}
+					}
+				});
+      })
+			.catch(error => {
+				if("error" in error){
+					let rfcError = error["error"]["There is no gas station with RFC"]
+					rfcError.forEach(rfc => $.notify(`No existe en sistama el RFC: ${rfc}`, 'error'))
+				}else{
+					console.error(error)
+					$.notify(`Ocurrio un error al intentar comparar las gasolineras: ${error}`, 'error')
+				}
+			})
+		return false;
+	})
+</script>
+{% endblock javascript %}

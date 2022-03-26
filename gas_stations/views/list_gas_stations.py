@@ -24,7 +24,7 @@ class ListRetrieveGasStationsViewSet(GenericViewSet, ListModelMixin, RetrieveMod
             if rfc_name:
                 queryset = queryset.filter(
                     Q(rfc__contains=rfc_name)
-                    | Q(company_name__contains=rfc_name)
+                    | Q(company_name__startswith=rfc_name)
                 )
         return queryset
 

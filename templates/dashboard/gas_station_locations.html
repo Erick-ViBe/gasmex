@@ -1,0 +1,107 @@
+{% extends 'base/master.html' %}
+
+{% block title %}
+Gasolineras en Mapa
+{% endblock title %}
+ 
+{% block content %}
+<div class="container d-flex flex-column justify-content-center align-items-center pt-5">
+  <div class="container d-flex justify-content-center">
+    <form id="searchId" class="w-75">
+      <div class="input-group mb-3">
+        <input type="text" id="rfcCompanyName" class="form-control" placeholder="Busqueda por RFC o Razon Social" aria-describedby="searchButton" required>
+        <div class="input-group-append">
+          <button class="btn btn-outline-secondary" type="submit" id="searchButton">Buscar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div id="map" style="width: 800px; height: 700px;"></div>
+</div>
+{% endblock content %}
+
+{% block javascript %}
+<script type="text/javascript">
+  const map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 4,
+    center: { lat: 23.940253, lng: -102.463605 },
+  });
+  let markers = []
+
+  if(navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      var latitude = position.coords.latitude;
+      var longitude = position.coords.longitude;
+      fetch(`http://api.geonames.org/findNearbyPostalCodesJSON?lat=${latitude}&lng=${longitude}&username=vibe22`, {method: "POST"})
+        .then(res => res.json())
+        .catch(error => console.error('Error:', error))
+        .then(res => {
+          const postalCodes = res["postalCodes"]
+          if(postalCodes){
+            const zip_code = postalCodes[0]["postalCode"]
+            getGasStations(`zip_code=${zip_code}`)
+          }
+        });
+    });
+  }
+
+  function getGasStations(filters){
+    fetchGasMex(`/gas_stations/?${filters}`, "GET")
+      .then(res => {
+        setMarkers(res["results"])
+      })
+      .catch(error => {
+        console.error('Error:', error)
+      })
+  }
+
+  function setMarkers(gasStations){
+    var infowindow = new google.maps.InfoWindow();
+    gasStations.forEach(gasStation => {
+      const marker = new google.maps.Marker({
+        position: { lat: parseFloat(gasStation["latitude"]), lng: parseFloat(gasStation["longitude"]) },
+        map: map,
+        title: gasStation["company_name"],
+      });
+      google.maps.event.addListener(marker, 'click', (function(marker, i) {
+        return function() {
+          data_infowindow = `
+            <div>
+              <h3>
+                ${gasStation["company_name"]}
+              </h3>
+              <ul>
+                <li><h5>Direccion: ${gasStation["address"]}, ${gasStation["zip_code"]}</h5></li>
+                <li><h5>RFC: ${gasStation["rfc"]}</h5></li>
+                <li><h5>Precio Gasolina Regular: ${gasStation["regular_gasoline_price"]}</h5></li>
+                <li><h5>Precio Gasolina Premium: ${gasStation["premium_gasoline_price"]}</h5></li>
+                <li><h5>Precio Diesel: ${gasStation["diesel_price"]}</h5></li>
+              </ul>
+            </div>
+          `
+          infowindow.setContent(data_infowindow);
+          infowindow.open(map, marker);
+        }
+      })(marker, i));
+      markers.push(marker)
+    })
+    var bounds = new google.maps.LatLngBounds();
+    if (markers.length>0) { 
+      for (var i = 0; i < markers.length; i++) {
+        bounds.extend(markers[i].getPosition());
+      }    
+      map.fitBounds(bounds);
+    }
+  }
+
+  $("#searchId").on("submit", function(){
+    let rfcCompanyName = $("#rfcCompanyName").val();
+    markers.forEach(marker => {
+      marker.setMap(null)
+    })
+    markers = []
+    getGasStations(`rfc_name=${rfcCompanyName}`)
+    return false;
+	})
+</script>
+{% endblock javascript %}
